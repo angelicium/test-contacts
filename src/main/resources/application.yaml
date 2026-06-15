@@ -1,0 +1,11 @@
+spring:
+  application:
+  name: test-contacts
+  datasource:
+    url: jdbc:postgresql://localhost/test_contacts
+    username: admin
+    password: mypass
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
