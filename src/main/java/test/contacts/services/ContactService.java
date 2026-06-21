@@ -23,47 +23,45 @@ public class ContactService implements IContactService {
 
     @Override
     public List<GetContactDTO> getContacts() {
-       List<ContactEntity> entites =  this.contactRepository.findAll();
-       return this.contactMapper.toListGetContactDTO(entites);
+       List<ContactEntity> entities =  this.contactRepository.findAll();
+       return this.contactMapper.toListGetContactDTO(entities);
     }
 
     @Override
     public GetContactDTO createContact(CreateContactDTO dto) {
-        ContactEntity newContact = ContactEntity.builder()
-                .name(dto.getName())
-                .age(dto.getAge())
-                .number(dto.getNumber())
-                .build();
+        ContactEntity newContact = this.contactMapper.toEntity(dto);
 
         this.contactRepository.save(newContact);
 
         return this.contactMapper.toGetContactDTO(newContact);
     }
 
-    @Override
-    public GetContactDTO updateContact(Long id, UpdateContactDTO dto) {
+    private ContactEntity getContactByID(Long id) throws ResponseStatusException {
         Optional<ContactEntity> optContactEntity = this.contactRepository.findById(id);
 
-        ContactEntity contactEntity = optContactEntity.orElseThrow(
+        return optContactEntity.orElseThrow(
                 () -> new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
                         "Такого контакта не существует"
                 )
         );
+    }
 
-        contactEntity.setName(dto.getName());
+    @Override
+    public GetContactDTO updateContact(Long id, UpdateContactDTO dto) throws ResponseStatusException {
+        ContactEntity contactEntity = this.getContactByID(id);
 
-        contactEntity.setAge(dto.getAge());
-
-        contactEntity.setNumber(dto.getNumber());
-
-        this.contactRepository.save(contactEntity);
+        this.contactRepository.save(
+                this.contactMapper.changeEntity(id, dto)
+        );
 
         return this.contactMapper.toGetContactDTO(contactEntity);
     }
 
     @Override
-    public void deleteContact(Long id) {
-        this.contactRepository.deleteById(id);
+    public void deleteContact(Long id) throws ResponseStatusException {
+        ContactEntity contactEntity = this.getContactByID(id);
+
+        this.contactRepository.delete(contactEntity);
     }
 }
